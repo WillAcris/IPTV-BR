@@ -15,9 +15,9 @@ const CATEGORIES = [
 ];
 
 const manifest = {
-    id: 'iptv.br.addon.categorizado',
+    id: 'iptv.br.addon',
     version: '2.0.0',
-    name: 'IPTV BR Categorizado',
+    name: 'IPTV BR',
     description: 'Addon IPTV com canais separados por categoria.',
     resources: ['stream', 'catalog', 'meta'],
     types: ['tv'],
@@ -41,7 +41,7 @@ async function loadM3U() {
         return allItemsCache;
     }
 
-    const url = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/main/IPTV-BR.M3U';
+    const url = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR.m3u';
 
     try {
         const res = await axios.get(url);
