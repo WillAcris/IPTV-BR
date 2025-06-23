@@ -8,17 +8,21 @@ const CATEGORIES = [
     { id: 'cat_band', name: 'Canais Band' },
     { id: 'cat_filmes', name: 'Filmes e Séries' },
     { id: 'cat_esportes', name: 'Esportes' },
+    { id: 'cat_noticias', name: 'Notícias' },
     { id: 'cat_infantil', name: 'Infantil' },
+    { id: 'cat_musica', name: 'Música' },
+    { id: 'cat_documentarios', name: 'Documentários' },
     { id: 'cat_variedades', name: 'Variedades' },
-    { id: 'cat_animes', name: 'Animes' },
+    { id: 'cat_24h', name: 'Canais 24h' },
+    { id: 'cat_internacional', name: 'Internacionais' },
     { id: 'cat_aberto', name: 'Outros Canais Abertos' },
 ];
 
 const manifest = {
     id: 'iptv.br.addon',
-    version: '2.0.0',
+    version: '3.0.0',
     name: 'IPTV BR',
-    description: 'Addon IPTV com canais organizados por categoria.',
+    description: 'Addon IPTV com canais organizados por categoria profissional.',
     resources: ['stream', 'catalog', 'meta'],
     types: ['tv'],
     catalogs: CATEGORIES.map(cat => ({
@@ -41,7 +45,7 @@ async function loadM3U() {
         return allItemsCache;
     }
 
-    const url = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR.m3u';
+    const url = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR-Atualizada.m3u';
 
     try {
         const res = await axios.get(url);
@@ -67,7 +71,7 @@ async function loadM3U() {
                     if (
                         streamUrl &&
                         !streamUrl.startsWith('#') &&
-                        !streamUrl.toLowerCase().endsWith('.mp4')
+                        !streamUrl.toLowerCase().endswith('.mp4')
                     ) {
                         items.push({
                             name: name,
