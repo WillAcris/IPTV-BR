@@ -18,7 +18,7 @@ const manifest = {
     id: 'iptv.br.addon',
     version: '2.0.0',
     name: 'IPTV BR',
-    description: 'Addon IPTV com canais separados por categoria.',
+    description: 'Addon IPTV com canais organizados por categoria.',
     resources: ['stream', 'catalog', 'meta'],
     types: ['tv'],
     catalogs: CATEGORIES.map(cat => ({
@@ -55,18 +55,22 @@ async function loadM3U() {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             if (line.startsWith('#EXTINF:')) {
-                const name = line.split(',').pop().replace(/Manotv|MANOTV|manotv/gi, '').trim();
+                const name = line.split(',').pop().trim();
                 const logoMatch = line.match(logoRegex);
                 const groupMatch = line.match(groupRegex);
 
                 const logo = logoMatch ? logoMatch[1] : defaultLogo;
-                const group = groupMatch ? groupMatch[1].replace(/Manotv|MANOTV|manotv/gi, '').trim() : 'Outros Canais Abertos';
+                const group = groupMatch ? groupMatch[1].trim() : 'Outros Canais Abertos';
 
                 if (i + 1 < lines.length) {
                     const streamUrl = lines[i + 1].trim();
-                    if (streamUrl && !streamUrl.startsWith('#')) {
+                    if (
+                        streamUrl &&
+                        !streamUrl.startsWith('#') &&
+                        !streamUrl.toLowerCase().endsWith('.mp4')
+                    ) {
                         items.push({
-                            name: 'IPTV_BR ' + name,
+                            name: name,
                             logo: logo,
                             group: group,
                             url: streamUrl,
