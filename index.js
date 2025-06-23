@@ -45,7 +45,7 @@ async function loadM3U() {
         return allItemsCache;
     }
 
-    const url = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR-Atualizada.m3u';
+    const url = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR.m3u';
 
     try {
         const res = await axios.get(url);
