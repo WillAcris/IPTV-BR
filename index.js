@@ -97,13 +97,16 @@ async function loadM3U() {
 
 builder.defineCatalogHandler(async ({ id }) => {
     const allItems = await loadM3U();
-    const requestedCategoryName = CATEGORIES.find(cat => cat.id === id)?.name.toLowerCase();
+    const requestedCategoryName = CATEGORIES.find(cat => cat.id === id)?.name;
     if (!requestedCategoryName) {
         return { metas: [] };
     }
 
+    console.log(`Categoria solicitada: ${requestedCategoryName}`);
+    console.log(`Total de itens carregados: ${allItems.length}`);
+
     const metas = allItems
-        .filter(item => item.group.toLowerCase().includes(requestedCategoryName))
+        .filter(item => item.group.toLowerCase().includes(requestedCategoryName.toLowerCase()))
         .map(item => ({
             id: item.id,
             type: 'tv',
