@@ -1,149 +1,118 @@
 const { addonBuilder, serveHTTP } = require('stremio-addon-sdk');
 const axios = require('axios');
 
+const M3U_URL = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR.m3u';
+
+// Categorias conforme solicitado
 const CATEGORIES = [
-    { id: 'cat_globo', name: 'Canais Globo' },
-    { id: 'cat_record', name: 'Canais Record' },
-    { id: 'cat_sbt', name: 'Canais SBT' },
-    { id: 'cat_band', name: 'Canais Band' },
-    { id: 'cat_filmes', name: 'Filmes e Séries' },
-    { id: 'cat_esportes', name: 'Esportes' },
-    { id: 'cat_noticias', name: 'Notícias' },
-    { id: 'cat_infantil', name: 'Infantil' },
-    { id: 'cat_musica', name: 'Música' },
-    { id: 'cat_documentarios', name: 'Documentários' },
-    { id: 'cat_variedades', name: 'Variedades' },
-    { id: 'cat_24h', name: 'Canais 24h' },
-    { id: 'cat_internacional', name: 'Internacionais' },
-    { id: 'cat_aberto', name: 'Outros Canais Abertos' },
+  { id: 'cat_globo', name: 'Canais Globo' },
+  { id: 'cat_record', name: 'Canais Record' },
+  { id: 'cat_sbt', name: 'Canais SBT' },
+  { id: 'cat_band', name: 'Canais Band' },
+  { id: 'cat_esportes', name: 'Esportes' },
+  { id: 'cat_filmes', name: 'Filmes e Séries' },
+  { id: 'cat_noticias', name: 'Notícias' },
+  { id: 'cat_documentarios', name: 'Documentários' },
+  { id: 'cat_infantil', name: 'Infantil' },
+  { id: 'cat_musica', name: 'Música' },
+  { id: 'cat_variedades', name: 'Variedades' },
+  { id: 'cat_religiao', name: 'Religião' },
+  { id: 'cat_internacional', name: 'Internacionais' },
+  { id: 'cat_24h', name: 'Canais 24h' },
+  { id: 'cat_aberto', name: 'Outros Canais Abertos' },
 ];
 
 const manifest = {
-    id: 'iptv.br.addon',
-    version: '3.0.0',
-    name: 'IPTV BR',
-    description: 'Addon IPTV com canais organizados por categoria profissional.',
-    resources: ['stream', 'catalog', 'meta'],
-    types: ['tv'],
-    catalogs: CATEGORIES.map(cat => ({
-        type: 'tv',
-        id: cat.id,
-        name: cat.name
-    })),
-    idPrefixes: ['iptv_'],
-    logo: 'https://img.icons8.com/color/480/tv.png'
+  id: 'iptv.br.addon',
+  version: '1.0.0',
+  name: 'IPTV BR',
+  description: 'Addon IPTV organizado conforme requisitos do usuário.',
+  resources: ['catalog', 'stream', 'meta'],
+  types: ['tv'],
+  catalogs: CATEGORIES.map(cat => ({ type: 'tv', id: cat.id, name: cat.name })),
+  idPrefixes: ['iptv_'],
+  logo: 'https://img.icons8.com/color/480/tv.png'
 };
 
 const builder = new addonBuilder(manifest);
 
-let allItemsCache = null;
-let lastFetchTime = 0;
+let cache = null;
+let cacheTime = 0;
+const CACHE_DURATION = 300000; // 5 minutos
 
 async function loadM3U() {
-    const now = Date.now();
-    if (allItemsCache && (now - lastFetchTime < 600000)) {
-        return allItemsCache;
+  const now = Date.now();
+  if (cache && (now - cacheTime < CACHE_DURATION)) return cache;
+
+  const res = await axios.get(M3U_URL);
+  const lines = res.data.split('\n');
+  const items = [];
+
+  const logoRegex = /tvg-logo="([^"]+)"/;
+  const groupRegex = /group-title="([^"]+)"/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('#EXTINF:')) {
+      const logoMatch = line.match(logoRegex);
+      const groupMatch = line.match(groupRegex);
+      const logo = logoMatch ? logoMatch[1] : 'https://img.icons8.com/color/480/tv.png';
+      const group = groupMatch ? groupMatch[1] : 'Outros Canais Abertos';
+
+      const name = line.substring(line.indexOf(',') + 1).trim();
+
+      const url = (lines[i+1]||'').trim();
+      if (url && !url.endsWith('.mp4')) {
+        items.push({
+          id: 'iptv_' + Buffer.from(url).toString('base64'),
+          name,
+          logo,
+          group,
+          url
+        });
+        i++;
+      }
     }
+  }
 
-    const url = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR.m3u';
-
-    try {
-        const res = await axios.get(url);
-        const lines = res.data.split('\n');
-        const items = [];
-
-        const logoRegex = /tvg-logo="([^"]+)"/;
-        const groupRegex = /group-title="([^"]+)"/;
-        const defaultLogo = 'https://img.icons8.com/color/480/tv.png';
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (line.startsWith('#EXTINF:')) {
-                const name = line.split(',').pop().trim();
-                const logoMatch = line.match(logoRegex);
-                const groupMatch = line.match(groupRegex);
-
-                const logo = logoMatch ? logoMatch[1] : defaultLogo;
-                const group = groupMatch ? groupMatch[1].trim() : 'Outros Canais Abertos';
-
-                if (i + 1 < lines.length) {
-                    const streamUrl = lines[i + 1].trim();
-                    if (
-                        streamUrl &&
-                        !streamUrl.startsWith('#') &&
-                        !streamUrl.toLowerCase().endswith('.mp4')
-                    ) {
-                        items.push({
-                            name: name,
-                            logo: logo,
-                            group: group,
-                            url: streamUrl,
-                            id: 'iptv_' + Buffer.from(streamUrl).toString('base64')
-                        });
-                        i++;
-                    }
-                }
-            }
-        }
-        allItemsCache = items;
-        lastFetchTime = now;
-        console.log(`Cache atualizado com ${items.length} itens.`);
-        return items;
-    } catch (error) {
-        console.error('Erro ao buscar ou processar o arquivo M3U:', error.message);
-        return allItemsCache || [];
-    }
+  cache = items;
+  cacheTime = now;
+  console.log(`IPTV BR: carregados ${items.length} canais.`);
+  return items;
 }
 
 builder.defineCatalogHandler(async ({ id }) => {
-    const allItems = await loadM3U();
-    const requestedCategoryName = CATEGORIES.find(cat => cat.id === id)?.name;
-    if (!requestedCategoryName) {
-        return { metas: [] };
-    }
-
-    console.log(`Categoria solicitada: ${requestedCategoryName}`);
-    console.log(`Total de itens carregados: ${allItems.length}`);
-
-    const metas = allItems
-        .filter(item => item.group.toLowerCase().includes(requestedCategoryName.toLowerCase()))
-        .map(item => ({
-            id: item.id,
-            type: 'tv',
-            name: item.name,
-            poster: item.logo,
-            description: item.group
-        }));
-
-    return { metas };
+  const items = await loadM3U();
+  const category = CATEGORIES.find(c => c.id === id)?.name.toLowerCase();
+  const metas = items
+    .filter(ch => ch.group.toLowerCase().includes(category))
+    .map(ch => ({
+      id: ch.id,
+      type: 'tv',
+      name: ch.name,
+      poster: ch.logo,
+      description: ch.group
+    }));
+  return { metas };
 });
 
 builder.defineMetaHandler(async ({ id }) => {
-    const items = await loadM3U();
-    const item = items.find(i => i.id === id);
-    if (!item) throw new Error('Canal não encontrado');
-
-    return {
-        meta: {
-            id: item.id,
-            type: 'tv',
-            name: item.name,
-            poster: item.logo,
-            description: 'Canal ao vivo'
-        }
-    };
+  const items = await loadM3U();
+  const ch = items.find(x => x.id === id);
+  if (!ch) throw new Error('Canal não encontrado');
+  return {
+    meta: { id: ch.id, type: 'tv', name: ch.name, poster: ch.logo, description: ch.group }
+  };
 });
 
 builder.defineStreamHandler(async ({ id }) => {
-    const items = await loadM3U();
-    const item = items.find(i => i.id === id);
-    if (!item) throw new Error('Canal não encontrado');
-
-    return { streams: [{ title: item.name, url: item.url }] };
+  const items = await loadM3U();
+  const ch = items.find(x => x.id === id);
+  if (!ch) throw new Error('Stream não encontrado');
+  return { streams: [{ title: ch.name, url: ch.url }] };
 });
 
 const port = process.env.PORT || 7000;
 serveHTTP(builder.getInterface(), { port });
-console.log(`Addon rodando na porta: ${port}`);
-
+console.log(`Addon iniciando na porta ${port}`);
 loadM3U();
