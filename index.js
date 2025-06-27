@@ -26,7 +26,7 @@ const manifest = {
   id: 'iptv.br.addon',
   version: '1.0.0',
   name: 'IPTV BR',
-  description: 'Addon IPTV organizado conforme requisitos do usuário.',
+  description: 'Addon IPTV.',
   resources: ['catalog', 'stream', 'meta'],
   types: ['tv'],
   catalogs: CATEGORIES.map(cat => ({ type: 'tv', id: cat.id, name: cat.name })),
