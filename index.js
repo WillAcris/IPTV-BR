@@ -3,7 +3,6 @@ const axios = require('axios');
 
 const M3U_URL = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR.m3u';
 
-// Categorias conforme solicitado
 const CATEGORIES = [
   { id: 'cat_globo', name: 'Canais Globo' },
   { id: 'cat_record', name: 'Canais Record' },
@@ -19,6 +18,7 @@ const CATEGORIES = [
   { id: 'cat_religiao', name: 'Religião' },
   { id: 'cat_internacional', name: 'Internacionais' },
   { id: 'cat_24h', name: 'Canais 24h' },
+  { id: 'cat_pluto', name: 'Pluto TV' },
   { id: 'cat_aberto', name: 'Outros Canais Abertos' },
 ];
 
@@ -38,7 +38,7 @@ const builder = new addonBuilder(manifest);
 
 let cache = null;
 let cacheTime = 0;
-const CACHE_DURATION = 300000; // 5 minutos
+const CACHE_DURATION = 300000;
 
 async function loadM3U() {
   const now = Date.now();
@@ -60,8 +60,8 @@ async function loadM3U() {
       const group = groupMatch ? groupMatch[1] : 'Outros Canais Abertos';
 
       const name = line.substring(line.indexOf(',') + 1).trim();
-
       const url = (lines[i+1]||'').trim();
+
       if (url && !url.endsWith('.mp4')) {
         items.push({
           id: 'iptv_' + Buffer.from(url).toString('base64'),
@@ -89,30 +89,3 @@ builder.defineCatalogHandler(async ({ id }) => {
     .map(ch => ({
       id: ch.id,
       type: 'tv',
-      name: ch.name,
-      poster: ch.logo,
-      description: ch.group
-    }));
-  return { metas };
-});
-
-builder.defineMetaHandler(async ({ id }) => {
-  const items = await loadM3U();
-  const ch = items.find(x => x.id === id);
-  if (!ch) throw new Error('Canal não encontrado');
-  return {
-    meta: { id: ch.id, type: 'tv', name: ch.name, poster: ch.logo, description: ch.group }
-  };
-});
-
-builder.defineStreamHandler(async ({ id }) => {
-  const items = await loadM3U();
-  const ch = items.find(x => x.id === id);
-  if (!ch) throw new Error('Stream não encontrado');
-  return { streams: [{ title: ch.name, url: ch.url }] };
-});
-
-const port = process.env.PORT || 7000;
-serveHTTP(builder.getInterface(), { port });
-console.log(`Addon iniciando na porta ${port}`);
-loadM3U();
