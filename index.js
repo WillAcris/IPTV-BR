@@ -19,7 +19,7 @@ const CATEGORIES = [
   { id: 'cat_internacional', name: 'Internacionais' },
   { id: 'cat_24h', name: 'Canais 24h' },
   { id: 'cat_pluto', name: 'Pluto TV' },
-  { id: 'cat_aberto', name: 'Outros Canais Abertos' },
+  { id: 'cat_aberto', name: 'Outros Canais Abertos' }
 ];
 
 const manifest = {
@@ -60,7 +60,7 @@ async function loadM3U() {
       const group = groupMatch ? groupMatch[1] : 'Outros Canais Abertos';
 
       const name = line.substring(line.indexOf(',') + 1).trim();
-      const url = (lines[i+1]||'').trim();
+      const url = (lines[i + 1] || '').trim();
 
       if (url && !url.endsWith('.mp4')) {
         items.push({
@@ -89,3 +89,30 @@ builder.defineCatalogHandler(async ({ id }) => {
     .map(ch => ({
       id: ch.id,
       type: 'tv',
+      name: ch.name,
+      poster: ch.logo,
+      description: ch.group
+    }));
+  return { metas };
+});
+
+builder.defineMetaHandler(async ({ id }) => {
+  const items = await loadM3U();
+  const ch = items.find(x => x.id === id);
+  if (!ch) throw new Error('Canal não encontrado');
+  return {
+    meta: { id: ch.id, type: 'tv', name: ch.name, poster: ch.logo, description: ch.group }
+  };
+});
+
+builder.defineStreamHandler(async ({ id }) => {
+  const items = await loadM3U();
+  const ch = items.find(x => x.id === id);
+  if (!ch) throw new Error('Stream não encontrado');
+  return { streams: [{ title: ch.name, url: ch.url }] };
+});
+
+const port = process.env.PORT || 7000;
+serveHTTP(builder.getInterface(), { port });
+console.log(`Addon iniciando na porta ${port}`);
+loadM3U();
