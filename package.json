@@ -1,12 +1,36 @@
 {
-  "name": "iptv-br",
+  "name": "iptv-brasil-addon",
   "version": "3.0.0",
+  "description": "Addon IPTV Brasil para Stremio - Acesso aos principais canais brasileiros",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "stremio",
+    "addon",
+    "iptv",
+    "brasil",
+    "tv",
+    "streaming",
+    "canais",
+    "television"
+  ],
+  "author": "WillAcris",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WillAcris/IPTV-BR.git"
   },
   "dependencies": {
     "axios": "^1.6.0",
     "stremio-addon-sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
