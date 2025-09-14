@@ -1,8 +1,7 @@
 const { addonBuilder, serveHTTP } = require('stremio-addon-sdk');
 const axios = require('axios');
 
-const M3U_URL = 'https://raw.githubusercontent.com/WillAcris/IPTV-BR-M3U/refs/heads/main/IPTV-BR.m3u';
-
+const M3U_URL = 'http://abre.ai/manotv3';
 const CATEGORIES = [
   { id: 'cat_globo', name: 'Canais Globo' },
   { id: 'cat_record', name: 'Canais Record' },
