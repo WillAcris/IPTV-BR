@@ -3,22 +3,27 @@ const axios = require('axios');
 
 const M3U_URL = 'http://abre.ai/manotv3';
 const CATEGORIES = [
-  { id: 'cat_globo', name: 'Canais Globo' },
-  { id: 'cat_record', name: 'Canais Record' },
-  { id: 'cat_sbt', name: 'Canais SBT' },
-  { id: 'cat_band', name: 'Canais Band' },
-  { id: 'cat_esportes', name: 'Esportes' },
-  { id: 'cat_filmes', name: 'Filmes e Séries' },
-  { id: 'cat_noticias', name: 'Notícias' },
-  { id: 'cat_documentarios', name: 'Documentários' },
-  { id: 'cat_infantil', name: 'Infantil' },
-  { id: 'cat_musica', name: 'Música' },
-  { id: 'cat_variedades', name: 'Variedades' },
-  { id: 'cat_religiao', name: 'Religião' },
-  { id: 'cat_internacional', name: 'Internacionais' },
-  { id: 'cat_24h', name: 'Canais 24h' },
-  { id: 'cat_pluto', name: 'Pluto TV' },
-  { id: 'cat_aberto', name: 'Outros Canais Abertos' }
+  { id: 'cat_globo', name: 'Canais Globo', keywords: ['globo'] },
+  { id: 'cat_record', name: 'Canais Record', keywords: ['record'] },
+  { id: 'cat_sbt', name: 'Canais SBT', keywords: ['sbt'] },
+  { id: 'cat_band', name: 'Canais Band', keywords: ['band'] },
+  { id: 'cat_sportv', name: 'SporTV', keywords: ['sportv'] },
+  { id: 'cat_espn', name: 'ESPN', keywords: ['espn'] },
+  { id: 'cat_esportes', name: 'Esportes', keywords: ['esportes', 'premiere', 'futebol', 'libertadores'] },
+  { id: 'cat_filmes', name: 'Filmes e Séries', keywords: ['filmes', 'series', 'telecine', 'space', 'tnt', 'south park'] },
+  { id: 'cat_noticias', name: 'Notícias', keywords: ['notícias', 'noticias'] },
+  { id: 'cat_infantil', name: 'Infantil', keywords: ['infantil'] },
+  { id: 'cat_animes', name: 'Animes & Geek', keywords: ['animes', 'geek'] },
+  { id: 'cat_musica', name: 'Música', keywords: ['música', 'musica'] },
+  { id: 'cat_variedades', name: 'Variedades', keywords: ['variedades'] },
+  { id: 'cat_novelas', name: 'Novelas', keywords: ['novelas'] },
+  { id: 'cat_reality', name: 'Reality Shows', keywords: ['reality'] },
+  { id: 'cat_comedia', name: 'Comédia', keywords: ['comédia', 'comedia'] },
+  { id: 'cat_lutas', name: 'Lutas', keywords: ['lutas'] },
+  { id: 'cat_internacional', name: 'Internacional', keywords: ['internacional'] },
+  { id: 'cat_pluto', name: 'Pluto TV', keywords: ['pluto'] },
+  { id: 'cat_aberto', name: 'Canais Abertos', keywords: ['aberto'] },
+  { id: 'cat_radio', name: 'Rádios', keywords: ['rádio', 'radio'] }
 ];
 
 const manifest = {
@@ -82,9 +87,17 @@ async function loadM3U() {
 
 builder.defineCatalogHandler(async ({ id }) => {
   const items = await loadM3U();
-  const category = CATEGORIES.find(c => c.id === id)?.name.toLowerCase();
+  const category = CATEGORIES.find(c => c.id === id);
+  
+  if (!category) {
+    return { metas: [] };
+  }
+  
   const metas = items
-    .filter(ch => ch.group.toLowerCase().includes(category))
+    .filter(ch => {
+      const groupLower = ch.group.toLowerCase();
+      return category.keywords.some(keyword => groupLower.includes(keyword.toLowerCase()));
+    })
     .map(ch => ({
       id: ch.id,
       type: 'tv',
@@ -92,6 +105,7 @@ builder.defineCatalogHandler(async ({ id }) => {
       poster: ch.logo,
       description: ch.group
     }));
+  
   return { metas };
 });
 
