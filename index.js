@@ -63,8 +63,8 @@ const manifest = {
   idPrefixes: ['iptv_'],
   
   // Configurações visuais
-  logo: 'https://i.imgur.com/K8nVBQH.png',
-  background: 'https://i.imgur.com/9sVqOoF.jpg',
+  logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/1200px-Flag_of_Brazil.svg.png',
+  background: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
   
   // Configurações de comportamento
   behaviorHints: {
