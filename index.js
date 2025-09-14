@@ -96,7 +96,7 @@ const manifest = {
       {
         name: 'genre',
         isRequired: false,
-        options: ['Ao Vivo', 'HD', 'FHD', 'SD']
+        options: ['IPTV']
       }
     ]
   })),
