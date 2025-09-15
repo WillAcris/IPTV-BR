@@ -190,19 +190,11 @@ async function loadM3U() {
             const urlLower = url.toLowerCase();
             const isInvalidFile = invalidExtensions.some(ext => urlLower.endsWith(ext));
             
-            // Aceitar URLs de streaming válidas (sem .mp4)
-            const isLikelyStream = urlLower.includes('playlist') || 
-                                  urlLower.includes('stream') || 
-                                  urlLower.includes('live') || 
-                                  urlLower.includes('channel') ||
-                                  urlLower.includes('?') ||           // URLs com parâmetros
-                                  urlLower.endsWith('.m3u8') ||
-                                  urlLower.endsWith('.m3u') ||
-                                  urlLower.endsWith('.ts') ||
-                                  urlLower.endsWith('/') ||           // URLs que terminam com / (como a fornecida)
-                                  (!urlLower.includes('.'));          // URLs sem extensão
+            // CORREÇÃO: Aceitar QUALQUER URL válida, exceto arquivos proibidos
+            // Não filtrar por palavras específicas - deixar o Stremio decidir se funciona
+            const isValidUrl = hasValidProtocol && !isInvalidFile;
             
-            if (!isInvalidFile && isLikelyStream) {
+            if (isValidUrl) {
               items.push({
                 id: 'iptv_' + Buffer.from(url).toString('base64').slice(0, 32),
                 name: name.replace(/🔴/g, '').trim(), // Remove emoji vermelho
@@ -264,8 +256,8 @@ builder.defineCatalogHandler(async ({ id }) => {
         description: `📺 ${ch.group}`,
         genres: ['IPTV'],
         releaseInfo: 'Ao Vivo'
-      }))
-      .slice(0, 100); // Limitar a 100 itens por categoria
+      }));
+      // CORREÇÃO: Removido limite de 100 canais - mostrar TODOS os canais encontrados
     
     console.log(`📺 Categoria ${category.name}: ${metas.length} canais`);
     return { metas };
